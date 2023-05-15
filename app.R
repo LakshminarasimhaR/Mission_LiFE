@@ -163,7 +163,7 @@ server <- function(input, output) {
   })
   
   output$totalStates <- renderText({
-    paste("Total number of States:", n_distinct(filtered_data()$State))
+    paste("Total number of States/UT's:", n_distinct(filtered_data()$State))
   })
 }
 
