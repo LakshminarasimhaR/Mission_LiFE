@@ -6,8 +6,11 @@ library(dplyr)
 library(ggplot2)
 library(readr)
 
-#data <- read_csv("C:/Users/naras/Documents/MLiFE/12523Life.csv")
-data <- read_csv("14523Life.csv")
+# Load data from an online source
+data <- read_csv("12523Life.csv")
+
+# Ensure that dates are in the correct format
+data$Date <- as.Date(data$Date, format = "%d-%m-%Y")  # adjust the format string according to your data
 
 # Create the sidebar
 sidebar <- dashboardSidebar(
@@ -25,7 +28,6 @@ sidebar <- dashboardSidebar(
 )
 
 # Create the dashboard body
-
 body <- dashboardBody(
   tags$div(
     tags$h1("Mission LiFE", style = "font-size: 30px; text-align: center; color: blue;"),
@@ -34,37 +36,37 @@ body <- dashboardBody(
   fluidRow(
     box(
       textOutput("totalParticipants"),
-      width = 3,
+      width = 4,
       solidHeader = TRUE,
       status = "primary"
     ),
     box(
       textOutput("totalEvents"),
-      width = 3,
+      width = 4,
       solidHeader = TRUE,
       status = "primary"
     ),
     box(
       textOutput("totalZoos"),
-      width = 3,
+      width = 4,
       solidHeader = TRUE,
       status = "primary"
     ),
     box(
       textOutput("totalStates"),
-      width = 3,
+      width = 4,
       solidHeader = TRUE,
       status = "primary"
     )
   ),
   tabsetPanel(
     tabPanel("Participants", plotOutput("participantsPlot")),
-    tabPanel("State-wise Events", plotOutput("eventsPlot")),
+    tabPanel("Events", plotOutput("eventsPlot")),
     tabPanel("Event Type", plotOutput("eventTypePlot")),
-    tabPanel("Zoo-wise Events", plotOutput("zooEventsPlot"))
+    tabPanel("Zoo Events", plotOutput("zooEventsPlot")),
+    tabPanel("Daily Events", plotOutput("dailyEventsPlot"))
   )
 )
-
 
 # Create the UI for the application
 ui <- dashboardPage(
@@ -97,56 +99,71 @@ server <- function(input, output) {
       summarise(Total_Zoo_Events = n())
   })
   
+  filtered_daily_data <- reactive({
+    data %>%
+      filter(State %in% input$state) %>%
+      group_by(Date) %>%
+      summarise(Total_Events = n())
+  })
+  
   output$participantsPlot <- renderPlot({
-    # Create plot
     ggplot(filtered_data(), aes(x = State, y = Total_Participants)) +
-      geom_col(fill = 'steelblue') +
+      geom_col(fill = "steelblue") +
       geom_text(aes(label = Total_Participants), vjust = -0.3, angle = 270) +
       theme_minimal() +
-      coord_flip() +
       theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
+      coord_flip() +
       labs(title = "Total Number of Participants per State",
            x = "State",
            y = "Number of Participants")
-    
   })
   
   output$eventsPlot <- renderPlot({
-    # Create plot
     ggplot(filtered_data(), aes(x = State, y = Total_Events)) +
-      geom_col(fill = 'steelblue') +
+      geom_col(fill = "steelblue") +
       geom_text(aes(label = Total_Events), hjust = -0.3) +
       theme_minimal() +
-      coord_flip() +
       theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
+      coord_flip() +
       labs(title = "Total Number of Events per State",
            x = "State",
            y = "Number of Events")
   })
   
   output$eventTypePlot <- renderPlot({
-    # Create plot
     ggplot(filtered_event_data(), aes(x = `Type of Event`, y = Total_Events_Type)) +
-      geom_col(fill = 'steelblue') +
+      geom_col(fill = "steelblue") +
       geom_text(aes(label = Total_Events_Type), hjust = -0.3) +
       theme_minimal() +
-      coord_flip() +
       theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
+      coord_flip() +
       labs(title = "Total Number of Each Type of Event",
            x = "Type of Event",
            y = "Number of Events")
   })
-  
   
   output$zooEventsPlot <- renderPlot({
     ggplot(filtered_zoo_data(), aes(x = Zoo_Name, y = Total_Zoo_Events)) +
       geom_col(fill = "steelblue") +
       geom_text(aes(label = Total_Zoo_Events), hjust = -0.3) +
       theme_minimal() +
-      coord_flip() +
       theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
+      coord_flip() +
       labs(title = "Total Number of Events per Zoo",
            x = "Zoo Name",
+           y = "Number of Events")
+  })
+  
+  output$dailyEventsPlot <- renderPlot({
+    ggplot(filtered_daily_data(), aes(x = Date, y = Total_Events)) +
+      geom_col(fill = "steelblue") +
+      geom_text(aes(label = Total_Events), vjust = -0.3, check_overlap = TRUE) +
+      theme_minimal() +
+      theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+      scale_x_date(date_breaks = "1 day", date_labels = "%Y-%m-%d") +
+      labs(title = "Total Number of Events per Day",
+           x = "Date",
            y = "Number of Events")
   })
   
@@ -163,9 +180,10 @@ server <- function(input, output) {
   })
   
   output$totalStates <- renderText({
-    paste("Total number of States/UT's:", n_distinct(filtered_data()$State))
+    paste("Total number of States:", n_distinct(filtered_data()$State))
   })
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
