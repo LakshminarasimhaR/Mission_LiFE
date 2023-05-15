@@ -7,7 +7,7 @@ library(ggplot2)
 library(readr)
 
 #data <- read_csv("C:/Users/naras/Documents/MLiFE/12523Life.csv")
-data <- read_csv("12523Life.csv")
+data <- read_csv("14523Life.csv")
 
 # Create the sidebar
 sidebar <- dashboardSidebar(
