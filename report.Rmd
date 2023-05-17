@@ -1,0 +1,120 @@
+---
+title: "Mission LiFE: Summary of Outreach Activities by Zoos"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(ggthemes)
+data <- read_csv("12523Life.csv")
+data$Date <- as.Date(data$Date, format = "%d-%m-%Y")
+```
+
+## Total Number of Participants per State/UT
+
+```{r, echo=F, warning=FALSE, message=FALSE, fig.width=8, fig.height=7.5}
+filtered_data <- data %>%
+  group_by(State) %>%
+  summarise(Total_Participants = sum(`Number of Participants`, na.rm = TRUE),
+            Total_Events = n())
+
+ggplot(filtered_data, aes(x = State, y = Total_Participants)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = Total_Participants), vjust = -0.3, angle = 270) +
+  theme_wsj() +
+  coord_flip() +
+  labs(x = "State",
+       y = "Number of Participants")
+```
+
+## Number of Participants per Zoo
+```{r, echo=F, warning=FALSE, message=FALSE, fig.width=8, fig.height=7.5}
+filtered_zoo_participants <- data %>%
+  group_by(Zoo_Name) %>%
+  summarise(Total_Participants_Zoo = sum(`Number of Participants`, na.rm = TRUE))
+
+ggplot(filtered_zoo_participants, aes(x = Zoo_Name, y = Total_Participants_Zoo)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = Total_Participants_Zoo), vjust = -0.3, angle = 270) +
+  theme_wsj() +
+  coord_flip() +
+  labs(x = "Zoo Name",
+       y = "Number of Participants")
+```
+
+## Total Number of Events per State/UT
+
+```{r, echo=F, warning=FALSE, message=FALSE, fig.width=8, fig.height=7.5}
+ggplot(filtered_data, aes(x = State, y = Total_Events)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = Total_Events), hjust = -0.3) +
+  theme_wsj() +
+  coord_flip() +
+  labs(x = "State",
+       y = "Number of Events")
+```
+
+## Total Number of Each Type of Event
+
+```{r, echo=F, warning=FALSE, message=FALSE, fig.width=8, fig.height=7.5}
+filtered_event_data <- data %>%
+  group_by(`Type of Event`) %>%
+  summarise(Total_Events_Type = n())
+
+ggplot(filtered_event_data, aes(x = `Type of Event`, y = Total_Events_Type)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = Total_Events_Type), hjust = -0.3) +
+  theme_wsj() +
+  coord_flip() +
+  labs(x = "Type of Event",
+       y = "Number of Events")
+```
+
+## Total Number of Events per Zoo
+
+```{r, echo=F, warning=FALSE, message=FALSE, fig.width=8, fig.height=7.5}
+filtered_zoo_data <- data %>%
+  group_by(Zoo_Name) %>%
+  summarise(Total_Zoo_Events = n())
+
+ggplot(filtered_zoo_data, aes(x = Zoo_Name, y = Total_Zoo_Events)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = Total_Zoo_Events), hjust = -0.3) +
+  theme_wsj() +
+  coord_flip() +
+  labs(x = "Zoo Name",
+       y = "Number of Events")
+```
+
+## Total Number of Events per Day
+
+```{r, echo=F, warning=FALSE, message=FALSE, fig.width=8, fig.height=7.5}
+
+filtered_daily_data <- data %>%
+  group_by(Date) %>%
+  summarise(Total_Events = n())
+
+ggplot(filtered_daily_data, aes(x = Date, y = Total_Events)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = Total_Events), vjust = -0.3, check_overlap = TRUE) +
+  theme_wsj() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  scale_x_date(date_breaks = "1 day", date_labels = "%Y-%m-%d") +
+  labs(x = "Date",
+       y = "Number of Events")
+```
+
+## Summary
+
+```{r, echo=F, warning=FALSE}
+
+cat("Total number of participants: ", sum(filtered_data$Total_Participants), "\n")
+cat("Total number of events: ", sum(filtered_data$Total_Events), "\n")
+cat("Total number of Zoos: ", n_distinct(filtered_zoo_data$Zoo_Name), "\n")
+cat("Total number of States/UT's: ", n_distinct(filtered_data$State), "\n")
+``` 
+
+
