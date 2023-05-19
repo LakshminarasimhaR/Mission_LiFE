@@ -7,10 +7,10 @@ library(ggplot2)
 library(readr)
 
 # Load data from an online source
-data <- read_csv("15523Life.csv")
+data <- read_csv("1952023.csv")
 
 # Ensure that dates are in the correct format
-data$Date <- as.Date(data$Date, format = "%d-%m-%Y")  # adjust the format string according to your data
+data$Date <- as.Date(data$Date, format = "%d-%m-%Y")
 
 # Create the sidebar
 sidebar <- dashboardSidebar(
@@ -61,9 +61,9 @@ body <- dashboardBody(
   ),
   tabsetPanel(
     tabPanel("Participants", plotOutput("participantsPlot")),
-    tabPanel("Events", plotOutput("eventsPlot")),
+    tabPanel("State-wise Events", plotOutput("eventsPlot")),
     tabPanel("Event Type", plotOutput("eventTypePlot")),
-    tabPanel("Zoo Events", plotOutput("zooEventsPlot")),
+    tabPanel("Zoo-wise Events", plotOutput("zooEventsPlot")),
     tabPanel("Daily Events", plotOutput("dailyEventsPlot"))
   )
 )
@@ -109,11 +109,11 @@ server <- function(input, output) {
   output$participantsPlot <- renderPlot({
     ggplot(filtered_data(), aes(x = State, y = Total_Participants)) +
       geom_col(fill = "steelblue") +
-      geom_text(aes(label = Total_Participants), vjust = -0.3, angle = 270) +
+      geom_text(aes(label = Total_Participants), vjust = -0.3, angle = 270, size = 3) +
       theme_minimal() +
       theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
       coord_flip() +
-      labs(title = "Total Number of Participants per State",
+      labs(title = "Total Number of Participants per State/UT",
            x = "State",
            y = "Number of Participants")
   })
@@ -121,11 +121,11 @@ server <- function(input, output) {
   output$eventsPlot <- renderPlot({
     ggplot(filtered_data(), aes(x = State, y = Total_Events)) +
       geom_col(fill = "steelblue") +
-      geom_text(aes(label = Total_Events), hjust = -0.3) +
+      geom_text(aes(label = Total_Events), hjust = -0.3, size = 3) +
       theme_minimal() +
       theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
       coord_flip() +
-      labs(title = "Total Number of Events per State",
+      labs(title = "Total Number of Events per State/UT",
            x = "State",
            y = "Number of Events")
   })
@@ -133,7 +133,7 @@ server <- function(input, output) {
   output$eventTypePlot <- renderPlot({
     ggplot(filtered_event_data(), aes(x = `Type of Event`, y = Total_Events_Type)) +
       geom_col(fill = "steelblue") +
-      geom_text(aes(label = Total_Events_Type), hjust = -0.3) +
+      geom_text(aes(label = Total_Events_Type), hjust = -0.3, size = 3) +
       theme_minimal() +
       theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
       coord_flip() +
@@ -145,7 +145,7 @@ server <- function(input, output) {
   output$zooEventsPlot <- renderPlot({
     ggplot(filtered_zoo_data(), aes(x = Zoo_Name, y = Total_Zoo_Events)) +
       geom_col(fill = "steelblue") +
-      geom_text(aes(label = Total_Zoo_Events), hjust = -0.3) +
+      geom_text(aes(label = Total_Zoo_Events), hjust = -0.3, size = 3) +
       theme_minimal() +
       theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
       coord_flip() +
@@ -157,7 +157,7 @@ server <- function(input, output) {
   output$dailyEventsPlot <- renderPlot({
     ggplot(filtered_daily_data(), aes(x = Date, y = Total_Events)) +
       geom_col(fill = "steelblue") +
-      geom_text(aes(label = Total_Events), vjust = -0.3, check_overlap = TRUE) +
+      geom_text(aes(label = Total_Events), vjust = -0.3, check_overlap = TRUE, size = 3) +
       theme_minimal() +
       theme(plot.margin = margin(1, 1, 1, 1, "cm")) +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
@@ -180,10 +180,19 @@ server <- function(input, output) {
   })
   
   output$totalStates <- renderText({
-    paste("Total number of States:", n_distinct(filtered_data()$State))
+    paste("Total number of States/UT's:", n_distinct(filtered_data()$State))
   })
+  
+  output$report <- downloadHandler(
+    filename = "AwarenessEventReport.pdf",
+    content = function(file) {
+      rmarkdown::render("report.Rmd", output_file = file,
+                        envir = new.env(parent = globalenv())
+      )
+    }
+  )
+  
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
