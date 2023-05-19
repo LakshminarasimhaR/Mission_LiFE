@@ -9,7 +9,7 @@ library(dplyr)
 library(ggplot2)
 library(readr)
 library(ggthemes)
-data <- read_csv("12523Life.csv")
+data <- read_csv("1952023.csv")
 data$Date <- as.Date(data$Date, format = "%d-%m-%Y")
 ```
 
@@ -116,5 +116,3 @@ cat("Total number of events: ", sum(filtered_data$Total_Events), "\n")
 cat("Total number of Zoos: ", n_distinct(filtered_zoo_data$Zoo_Name), "\n")
 cat("Total number of States/UT's: ", n_distinct(filtered_data$State), "\n")
 ``` 
-
-
